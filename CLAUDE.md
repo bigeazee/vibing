@@ -18,7 +18,7 @@ discipline you wrap around it.** The three zones make that progression physical.
 
 Every piece of content in this repo must be generic and non-attributable:
 
-- No Genomics England internal process detail, system names, environment names or team names
+- No employer-internal process detail, system names, environment names or team names
 - No real Jira project keys, ticket IDs or internal URLs
 - No participant, patient or genomic data of any kind, real or realistic-looking
 - Fictional or clearly anonymised examples throughout
