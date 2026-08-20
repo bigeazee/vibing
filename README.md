@@ -21,8 +21,9 @@ changes is the discipline you wrap around it.
 | `E`, `Enter` or `Space` | Open whatever you are standing next to |
 | `Escape` | Close a panel, or walk away from a gate question |
 
-Inside a station panel, `↑` `↓` and `PageUp` `PageDown` scroll it. At a gate,
-`1`–`4` pick an answer outright, or use `↑` `↓` and `Enter`.
+Inside a station panel, `↑` `↓` and `PageUp` `PageDown` scroll it, and `End`
+jumps straight to the receipt at the bottom — which is the part worth reading.
+At a gate, `1`–`4` pick an answer outright, or use `↑` `↓` and `Enter`.
 
 You do not have to be facing something to open it — standing next to it is
 enough. Facing it just decides which one you get when there are two.
