@@ -43,7 +43,16 @@
 
       /* Sized by the viewport, never by its contents, so measuring it to work
          out the scale cannot feed back into the layout. `position: relative` is
-         what the HUD layer anchors to. */
+         what the HUD layer anchors to.
+
+         NO PADDING, deliberately. The canvas only ever grows in whole multiples
+         of 240px, so sixteen pixels of padding is not a margin - it is a whole
+         scale step at some sizes. At 1280x800, the commonest small-laptop
+         resolution, the difference is the game rendering at 800x480 instead of
+         1200x720. Integer scaling letterboxes the remainder anyway, which is
+         all the breathing room this needs. Everything else below is trimmed for
+         the same reason: vertical chrome here is not decoration, it is
+         resolution. */
       #stage {
         position: relative;
         flex: 1 1 auto;
@@ -53,8 +62,6 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        padding: 8px;
-        box-sizing: border-box;
       }
 
       canvas {
@@ -71,11 +78,14 @@
         outline: none;
       }
 
+      /* Explicit line-height, not `normal`: `normal` varies by platform font,
+         and here a couple of pixels either way is a scale step. */
       #hint {
         flex: 0 0 auto;
         margin: 0;
-        padding: 4px 16px 14px;
-        font-size: 15px;
+        padding: 2px 16px 6px;
+        font-size: 14px;
+        line-height: 1.25;
         color: #97a3b6;
         text-align: center;
       }

@@ -74,10 +74,11 @@ export function lockGates(grid, gates, isZoneUnlocked) {
  * Validate one station or gate tile and return it.
  *
  * `solidIsAllowed` is deliberately absent: a definition's tile must be walkable
- * ground in the map, full stop. The one wrinkle is that markStationsSolid has
- * already made station tiles solid by the time lockGates runs, so a gate sharing
- * a station's tile is reported as a map conflict. That is the right answer -
- * they cannot both have it.
+ * ground in the map, full stop.
+ *
+ * What this does NOT catch is two definitions sharing one tile - see the
+ * mapVerdict comment below for why, and tests/content.test.js for where that
+ * case is caught instead.
  */
 function requireWalkableTile(grid, definition, kind, caller) {
   if (!definition || typeof definition !== "object") {

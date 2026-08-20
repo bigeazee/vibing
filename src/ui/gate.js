@@ -16,12 +16,14 @@
  * button you can click. This gets driven live in front of an audience.
  */
 
+import { el, trapTab } from "./overlay.js";
+
 /** How long the confirmation stays up before the quiz closes itself. */
 const PASS_LINGER_MS = 1100;
 
 /**
  * @param {HTMLElement} root an empty container element in index.html
- * @returns {{open: (gate: object, handlers?: {onPass?: Function}) => void,
+ * @returns {{open: (gate: object, handlers?: {onPass?: Function, onClose?: Function}) => void,
  *            close: () => void, isOpen: () => boolean}}
  */
 export function createGateQuiz(root) {
@@ -30,6 +32,7 @@ export function createGateQuiz(root) {
   let open = false;
   let passed = false;
   let onPass = null;
+  let onClose = null;
   let closeTimer = null;
   let returnFocusTo = null;
   let buttons = [];
@@ -103,8 +106,11 @@ export function createGateQuiz(root) {
 
   /**
    * @param {object} gate one object from src/content/gates.js
-   * @param {{onPass?: Function}} [handlers] onPass fires once, on a correct
-   *   answer, before the quiz closes
+   * @param {{onPass?: Function, onClose?: Function}} [handlers]
+   *   onPass fires once, on a correct answer, before the quiz closes.
+   *   onClose fires on EVERY way out - Escape, the backdrop, and the timer that
+   *   closes the quiz after a correct answer - so the caller never has to poll
+   *   isOpen() to notice.
    */
   function openQuiz(gate, handlers = {}) {
     if (!gate) throw new Error("gateQuiz.open: needs a gate object.");
@@ -115,6 +121,7 @@ export function createGateQuiz(root) {
     cancelCloseTimer();
     passed = false;
     onPass = typeof handlers.onPass === "function" ? handlers.onPass : null;
+    onClose = typeof handlers.onClose === "function" ? handlers.onClose : null;
 
     question.textContent = gate.question || "";
     note.textContent = "";
@@ -178,6 +185,11 @@ export function createGateQuiz(root) {
       returnFocusTo.focus();
     }
     returnFocusTo = null;
+    // Cleared before it fires, so a handler that reopens the quiz is not then
+    // holding a stale closer.
+    const closed = onClose;
+    onClose = null;
+    if (closed) closed();
   }
 
   function cancelCloseTimer() {
@@ -194,30 +206,4 @@ export function createGateQuiz(root) {
       return open;
     },
   };
-}
-
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined && text !== null) node.textContent = text;
-  return node;
-}
-
-/** Tab must not escape an open overlay into the page behind it. */
-function trapTab(container, event) {
-  const focusable = container.querySelectorAll(
-    'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
-  );
-  if (focusable.length === 0) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  const active = document.activeElement;
-
-  if (event.shiftKey && (active === first || !container.contains(active))) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && active === last) {
-    event.preventDefault();
-    first.focus();
-  }
 }

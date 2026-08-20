@@ -20,6 +20,8 @@
  *      a working panel for a jumping page. We scroll by hand instead.
  */
 
+import { el, trapTab } from "./overlay.js";
+
 /** The seven receipt fields, in CLAUDE.md's order. Never reorder, never trim. */
 const RECEIPT_FIELDS = [
   ["buildTime", "Build time"],
@@ -36,8 +38,9 @@ const SCROLL_STEP = 72;
 
 /**
  * @param {HTMLElement} root an empty container element in index.html
- * @returns {{open: (station: object) => void, close: () => void,
- *            isOpen: () => boolean, onClose: (handler: Function) => void}}
+ * @returns {{open: (station: object) => void, openPlaque: (plaque: object) => void,
+ *            close: () => void, isOpen: () => boolean,
+ *            onClose: (handler: Function) => void}}
  */
 export function createPanel(root) {
   if (!root) throw new Error("createPanel: needs a container element from index.html.");
@@ -131,6 +134,34 @@ export function createPanel(root) {
     title.textContent = station.title || station.id;
 
     body.replaceChildren(...content);
+    body.scrollTop = 0;
+
+    returnFocusTo = document.activeElement;
+    root.hidden = false;
+    open = true;
+    body.focus();
+  }
+
+  /**
+   * A plaque uses the panel's chrome and none of its structure.
+   *
+   * No four sections and NO RECEIPT: a zone plaque has no build time, no cost
+   * and no line count, and a receipt card carrying seven invented figures would
+   * cost more trust than the plaque is worth. See src/content/plaques.js.
+   *
+   * @param {object} plaque one object from src/content/plaques.js
+   */
+  function openPlaquePanel(plaque) {
+    if (!plaque) throw new Error("panel.openPlaque: needs a plaque object.");
+
+    const nodes = [];
+    if (plaque.level) nodes.push(el("p", "plaque-level", String(plaque.level)));
+    nodes.push(...paragraphs(plaque.body));
+
+    eyebrow.textContent = "The way this zone works";
+    title.textContent = plaque.title || `Zone ${plaque.zone}`;
+
+    body.replaceChildren(...nodes);
     body.scrollTop = 0;
 
     returnFocusTo = document.activeElement;
@@ -263,8 +294,8 @@ export function createPanel(root) {
         el(
           "p",
           "receipt-note",
-          "This one has not been built yet, so every figure above is an estimate. " +
-            "When it gets built these get replaced with what it actually took."
+          "Anything marked (est.) is an estimate rather than a measurement. Those get " +
+            "replaced with the real figure the moment there is one."
         )
       );
     }
@@ -312,6 +343,7 @@ export function createPanel(root) {
 
   return {
     open: openPanel,
+    openPlaque: openPlaquePanel,
     close,
     isOpen() {
       return open;
@@ -323,33 +355,6 @@ export function createPanel(root) {
 }
 
 // -------------------------------------------------------------------- shared
-
-/** Small enough to keep local. See the summary note about src/ui/overlay.js. */
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined && text !== null) node.textContent = text;
-  return node;
-}
-
-/** Tab must not escape an open overlay into the page behind it. */
-function trapTab(container, event) {
-  const focusable = container.querySelectorAll(
-    'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
-  );
-  if (focusable.length === 0) return;
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  const active = document.activeElement;
-
-  if (event.shiftKey && (active === first || !container.contains(active))) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && active === last) {
-    event.preventDefault();
-    first.focus();
-  }
-}
 
 function selectAll(node) {
   const selection = window.getSelection && window.getSelection();

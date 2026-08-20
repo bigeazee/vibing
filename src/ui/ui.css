@@ -39,7 +39,7 @@
   background: var(--raised-2);
   border: 2px solid var(--edge);
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 6px 14px;
   cursor: pointer;
   line-height: 1.2;
 }
@@ -245,6 +245,23 @@
 
 .demo-links a {
   color: var(--focus);
+}
+
+/* ------------------------------------------------------------------ plaque */
+
+/*
+  A plaque has no sections and no receipt, so the level line is doing the work
+  the receipt does elsewhere: it is the one piece of the panel that states how
+  much effort this zone represents.
+*/
+.plaque-level {
+  margin: 0 0 clamp(14px, 2vh, 20px);
+  padding: 10px 14px;
+  border-left: 4px solid var(--accent);
+  background: #10151d;
+  border-radius: 0 8px 8px 0;
+  font-weight: 700;
+  color: var(--accent);
 }
 
 /* ---------------------------------------------------------------- receipt */
@@ -493,7 +510,7 @@
   flex: 0 0 auto;
   width: min(66ch, 96vw);
   box-sizing: border-box;
-  padding: 10px 12px 0;
+  padding: 6px 12px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
