@@ -1,8 +1,13 @@
 # Work Package 1 — Engine core, first playable, and deployment
 
-**Branch:** `wp1-engine-core` (create it from `main`)
-**Status when you start:** the repo contains `CLAUDE.md`, `CREDITS.md`, `assets/` and
-`src/content/sprites.js`. Nothing else.
+**Branch:** create `wp1-engine-core` from `claude/prompt-review-wlebc7`, which carries the
+assets and the sprite contract. (If that branch has already been merged into `main`, branch
+from `main` instead — check with `git log --oneline main` first.)
+
+**Status when you start:** the repo contains `CLAUDE.md`, `CREDITS.md`, `assets/`,
+`src/content/sprites.js` and `docs/work-packages/`. Nothing else. If `assets/` or
+`src/content/sprites.js` is missing, you have branched from the wrong place — stop and fix
+that before writing any code.
 
 ---
 
