@@ -139,6 +139,7 @@ licence and updating `CREDITS.md`.
 ```
 /index.html
 /src/
+  main.js        boot module: the only place engine, content, UI and state meet
   engine/        loop, input, camera, collision, renderer
   ui/            panel, gate quiz, HUD
   content/       stations.js, gates.js, map.js, sprites.js
@@ -156,6 +157,12 @@ licence and updating `CREDITS.md`.
 station definitions as data. Adding a station must mean adding one object to
 `src/content/stations.js` — no engine changes, ever. If a content change requires an engine
 change, the engine is wrong.
+
+`src/main.js` is the seam that makes that separation possible. `startGame()` takes the map
+definition as a parameter precisely so the engine never imports content, which means
+something has to marry the two — and that something is the boot module, not the engine and
+not a script tag. Keep the wiring there and keep it thin: it reads content, hands it to the
+engine, and connects the UI. Logic that ends up in `main.js` is logic nobody can test.
 
 ### Purity for testability
 
@@ -291,6 +298,14 @@ covering the pure logic:
 - **Content validation** — every station has all required fields, every receipt has all
   seven, every station tile is in bounds and not on a collision tile, every gate question
   has exactly one correct answer, every referenced sprite name exists in the sprite contract
+
+Validation errors come in two scopes, and the message must match the scope it is in.
+A fault in the grid — a ragged row, a character with no legend entry — names the **row,
+column and offending character**. A fault in a definition — a legend entry, a station, a
+gate — has no row or column, so it names the **key it belongs to**: the legend character,
+the station `id`, the gate `id`. Definitions are validated eagerly, so a broken entry fails
+even when nothing on the map references it yet. The person reading the message is usually a
+non-developer who has just edited one line by hand; tell them which line.
 
 **That last one matters most: it is what stops a contributor's pull request breaking the
 live site.** Treat it as the highest-value test in the repo.
