@@ -1,0 +1,545 @@
+/*
+  OVERLAY UI
+  ==========
+
+  The station panel, the gate quiz, the HUD and the two controls under the
+  canvas. Everything here is HTML above the canvas; none of it is drawn into it.
+
+  LEGIBILITY OUTRANKS EVERYTHING ELSE IN THIS FILE. The audience for this is
+  watching a compressed video stream of somebody else's screen, some of them in
+  a window taking up half a laptop display. So: large type, heavy contrast,
+  generous line height, and a measure short enough to read in one pass. Where a
+  choice is between more information and bigger information, bigger wins.
+
+  Sizes use clamp() so the same panel is readable in a shared half-window and
+  does not turn into a billboard on a 4K monitor.
+*/
+
+:root {
+  --ink: #f2f6fc;
+  --ink-soft: #b3c0d4;
+  --ink-faint: #8794a9;
+  --sunk: #0d0f14;
+  --raised: #171d28;
+  --raised-2: #1f2736;
+  --edge: #33405a;
+  --accent: #ffc861;
+  --accent-ink: #1a1206;
+  --good: #7ee0a8;
+  --focus: #7fd2ff;
+}
+
+/* ------------------------------------------------------------------ shared */
+
+.button {
+  font: inherit;
+  font-size: clamp(14px, 1.4vw, 16px);
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--raised-2);
+  border: 2px solid var(--edge);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.button:hover {
+  background: #2a3446;
+  border-color: #4a5b7d;
+}
+
+.button-strong {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.button-strong:hover {
+  background: #ffd485;
+  border-color: #ffd485;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 2vh, 24px);
+  box-sizing: border-box;
+}
+
+.overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 11, 0.86);
+}
+
+/* ------------------------------------------------------------------- panel */
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(66ch, 96vw);
+  max-height: min(92vh, 100%);
+  background: var(--raised);
+  border: 3px solid var(--edge);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.panel-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: clamp(14px, 2.4vh, 22px) clamp(16px, 3vw, 28px);
+  background: var(--raised-2);
+  border-bottom: 2px solid var(--edge);
+}
+
+.panel-head-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.panel-eyebrow {
+  margin: 0 0 4px;
+  font-size: clamp(13px, 1.4vw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.panel-title {
+  margin: 0;
+  font-size: clamp(22px, 3.2vw, 34px);
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.panel-close {
+  flex: 0 0 auto;
+}
+
+.panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(14px, 2.4vh, 24px) clamp(16px, 3vw, 28px) clamp(20px, 3vh, 32px);
+  font-size: clamp(16px, 1.75vw, 20px);
+  line-height: 1.62;
+  color: var(--ink);
+}
+
+.panel-body:focus {
+  outline: none;
+}
+
+.panel-section + .panel-section {
+  margin-top: clamp(20px, 3vh, 30px);
+  padding-top: clamp(16px, 2.4vh, 24px);
+  border-top: 2px solid #232c3c;
+}
+
+.panel-heading {
+  margin: 0 0 0.5em;
+  font-size: clamp(17px, 2vw, 22px);
+  line-height: 1.25;
+  color: var(--accent);
+}
+
+.panel-text {
+  margin: 0 0 0.85em;
+}
+
+.panel-text:last-child {
+  margin-bottom: 0;
+}
+
+.panel-steps {
+  margin: 0;
+  padding-left: 1.4em;
+}
+
+.panel-steps li {
+  margin-bottom: 0.7em;
+}
+
+.panel-steps li:last-child {
+  margin-bottom: 0;
+}
+
+/* ------------------------------------------------------------ starter prompt */
+
+.prompt-block {
+  margin-top: clamp(14px, 2vh, 20px);
+  border: 2px solid var(--edge);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #10151d;
+}
+
+.prompt-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px 8px 14px;
+  background: var(--raised-2);
+  border-bottom: 2px solid var(--edge);
+}
+
+.prompt-label {
+  font-size: clamp(13px, 1.4vw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.prompt-text {
+  margin: 0;
+  padding: 14px;
+  max-height: 40vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  font-size: clamp(13px, 1.45vw, 16px);
+  line-height: 1.55;
+  color: #dfe8f5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ------------------------------------------------------------------- demo */
+
+.demo-mount,
+.demo-note {
+  margin: 0;
+}
+
+.demo-note {
+  padding: 14px 16px;
+  border: 2px dashed var(--edge);
+  border-radius: 10px;
+  color: var(--ink-soft);
+  background: #10151d;
+}
+
+.demo-links {
+  margin: 0;
+  padding-left: 1.3em;
+}
+
+.demo-links a {
+  color: var(--focus);
+}
+
+/* ---------------------------------------------------------------- receipt */
+
+.receipt {
+  border: 3px solid var(--accent);
+  border-radius: 12px;
+  background: #12171f;
+  padding: clamp(12px, 2vh, 18px);
+}
+
+.receipt-grid {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.receipt-row {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 32%) 1fr;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #26303f;
+}
+
+.receipt-row:last-child {
+  border-bottom: 0;
+}
+
+.receipt-row dt {
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+
+.receipt-row dd {
+  margin: 0;
+  color: var(--ink);
+}
+
+.receipt-missing {
+  color: #ff9d8a;
+}
+
+.receipt-note {
+  margin: 12px 0 0;
+  font-size: 0.88em;
+  line-height: 1.5;
+  color: var(--accent);
+}
+
+@media (max-width: 34rem) {
+  .receipt-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
+
+/* -------------------------------------------------------------- gate quiz */
+
+.quiz {
+  position: relative;
+  width: min(58ch, 96vw);
+  max-height: min(92vh, 100%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--raised);
+  border: 3px solid var(--accent);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  padding: clamp(18px, 3vh, 30px) clamp(18px, 3vw, 32px);
+  box-sizing: border-box;
+}
+
+.quiz-eyebrow {
+  margin: 0 0 6px;
+  font-size: clamp(13px, 1.4vw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.quiz-question {
+  margin: 0 0 clamp(16px, 2.5vh, 24px);
+  font-size: clamp(20px, 2.9vw, 30px);
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.quiz-options {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: clamp(16px, 1.8vw, 20px);
+  line-height: 1.35;
+  color: var(--ink);
+  background: var(--raised-2);
+  border: 2px solid var(--edge);
+  border-radius: 10px;
+  padding: clamp(11px, 1.7vh, 16px) 16px;
+  cursor: pointer;
+}
+
+.quiz-option:hover:not(:disabled) {
+  background: #2a3446;
+  border-color: #4a5b7d;
+}
+
+.quiz-option:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.quiz-key {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 1.9em;
+  height: 1.9em;
+  border-radius: 7px;
+  background: #0f141c;
+  border: 2px solid var(--edge);
+  font-weight: 700;
+  font-size: 0.85em;
+  color: var(--ink-soft);
+}
+
+/*
+  Reserved whether or not there is anything in it, so answering never shifts
+  the options out from under the pointer.
+*/
+.quiz-note {
+  margin: clamp(14px, 2vh, 20px) 0 0;
+  min-height: 1.6em;
+  font-size: clamp(15px, 1.7vw, 19px);
+  line-height: 1.45;
+  color: transparent;
+}
+
+/*
+  Amber, never red, and never a count of attempts. A wrong answer here is not a
+  failure - there is no way to lose this game.
+*/
+.quiz-note.is-nudge {
+  color: var(--accent);
+}
+
+.quiz-note.is-pass {
+  color: var(--good);
+  font-weight: 700;
+}
+
+.quiz-help {
+  margin: clamp(10px, 1.6vh, 16px) 0 0;
+  font-size: clamp(13px, 1.4vw, 15px);
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+
+/* --------------------------------------------------------------------- hud */
+
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hud-meta {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hud-zone,
+.hud-progress {
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(9, 12, 18, 0.86);
+  border: 2px solid var(--edge);
+  font-size: clamp(13px, 1.4vw, 16px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.hud-zone {
+  color: var(--accent);
+}
+
+.hud-prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 8px 16px 8px 10px;
+  border-radius: 999px;
+  background: rgba(9, 12, 18, 0.92);
+  border: 2px solid var(--accent);
+  font-size: clamp(15px, 1.7vw, 19px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-key {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  min-width: 1.8em;
+  height: 1.8em;
+  padding: 0 0.35em;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.9em;
+  font-weight: 800;
+}
+
+/* ---------------------------------------------------------------- controls */
+
+#controls {
+  flex: 0 0 auto;
+  width: min(66ch, 96vw);
+  box-sizing: border-box;
+  padding: 10px 12px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.controls-drawer {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--raised);
+  border: 2px solid var(--edge);
+  border-radius: 10px;
+}
+
+.controls-question {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(14px, 1.5vw, 17px);
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.controls-export {
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  background: #10151d;
+  border: 2px solid var(--edge);
+  border-radius: 8px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  font-size: clamp(13px, 1.45vw, 16px);
+  line-height: 1.5;
+  color: #dfe8f5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

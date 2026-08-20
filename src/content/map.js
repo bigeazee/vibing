@@ -17,6 +17,21 @@
  *   - `terrain` must be an opaque sprite, `overlay` is drawn on top of it
  *   - `solid: true` blocks movement
  *   - sprite names come from src/content/sprites.js and nowhere else
+ *
+ * THE TWO BARRIERS ARE LORE-BEARING. Columns 13 and 26 are a solid fence from
+ * the top border to the bottom border, pierced by exactly one walkable tile
+ * each, at row 9. Those two tiles are the gates in src/content/gates.js, and
+ * they are the only way between the zones. A single walkable tile anywhere else
+ * in either column lets the player skip a zone's content, which is the one thing
+ * the gate mechanic exists to prevent. tests/zones.test.js flood-fills the map
+ * from the spawn and fails if that ever happens, so do not take the fence apart
+ * to make room for something.
+ *
+ * Stations and gates are NOT in this grid. They are drawn from stations.js and
+ * gates.js as entities, so adding a station stays a one-object edit to one file.
+ * Their tiles must therefore be walkable ground here - markStationsSolid() and
+ * lockGates() in src/engine/zones.js make them solid at boot, and they throw if
+ * the map already did.
  */
 
 /**
@@ -76,8 +91,7 @@ export const legend = {
   "}": { terrain: "grass", overlay: "fence_corner_br", solid: true },
   "<": { terrain: "grass", overlay: "fence_h_end_left", solid: true },
   ">": { terrain: "grass", overlay: "fence_h_end_right", solid: true },
-  // Two posts with a space between them. Not solid: it reads as a way through,
-  // and it is the look the zone gates will use later.
+  // Two posts with a space between them. Not solid: it reads as a way through.
   "G": { terrain: "grass", overlay: "fence_gap" },
 
   // -- props ----------------------------------------------------------------
@@ -90,35 +104,38 @@ export const legend = {
 
 export const mapDef = {
   name: "Demo",
-  // On the path, a couple of tiles in from the west end.
-  spawn: { x: 5, y: 9 },
-  // Two ranges so zoneAt() is exercised across a boundary. The real map's zones
-  // arrive with the real map.
+  // On the path in Zone 1, a few tiles in from the west end.
+  spawn: { x: 4, y: 9 },
+  // Three inclusive tile-x ranges covering the whole map. Each barrier column
+  // belongs to the zone BEHIND it, so a gate tile is the last tile of the zone
+  // you are leaving rather than the first tile of the one you have not earned.
   zones: [
-    { id: 1, from: 0, to: 19 },
-    { id: 2, from: 20, to: 39 },
+    { id: 1, from: 0, to: 13 },
+    { id: 2, from: 14, to: 26 },
+    { id: 3, from: 27, to: 39 },
   ],
-  // 40 columns x 20 rows. The tree line around the edge is the map border.
+  // 40 columns x 20 rows. Trees are the map border; the two "|" columns at
+  // x=13 and x=26 are the zone barriers, each pierced only at row 9.
   rows: [
-    "TtTYToTtTyTtTYToTtTyTtTYToTtTyTtTYToTtTy",
-    "T.....,......*...,..........,.*........t",
-    "Y,...[---+----]..y..T..,..*.o.....,....T",
-    "T....|W,....,K|...,...*.t....,b....y...y",
-    "o*Y..|,.C..,..|...*...Y.,.......Y..,...T",
-    "T....|....P..L|....T..........,*.......t",
-    "t..y.{---G----}.s........,t*...o....,..T",
-    "T.....*..,%%......m.,s.*......%,....b..Y",
-    "y.*1222222222222222222222222222222223,.T",
-    "T..455555555q555555w5555555e5555r5556..o",
-    "t..7888888888888888888888888888888889.,T",
-    "T......*...,..........,.%%.......,.....t",
-    "Y..*..,b....t....,..*..m....,.....T..*.T",
-    "T,..y.<-->..,...*......,o.....s..m,....y",
-    "o......,....*.....,..........t.........T",
-    "T.,...T.*....o.......y..,*.........,Y..t",
-    "t.b.*s..,t.....b...,.*...T....,.......*T",
-    "T..,....m..b..,..Y..b....,.b.....o*.,..Y",
-    "y........,...*......,.........*,.......T",
-    "YToTtTyTtTYToTtTyTtTYToTtTyTtTYToTtTyTtT",
+    "TtTYToTtTyTtTYToTtTyTtTYToTtTyTtTYToTtTy", //  0
+    "t.*...,....Y.|...,.....T*.|.,......*...T", //  1
+    "T,T.....*o..,|..T..*...,..|..T*...,....t", //  2
+    "Y..*..t,.....|*...,..y...*|..,......*y.T", //  3
+    "T.,......*.b.|.t....*...,.|....*..o,...y", //  4
+    "o.y.*...,....|.*...,....o.|.Y.,......*.T", //  5
+    "T..s......T..|,...b..*...,|....b*...t..t", //  6
+    "t....*...,...|..*...,.....|*...,......*T", //  7
+    "T122222222222|222222222222|222222222223Y", //  8
+    "y45555555q55555555w55555555555e5555r556T", //  9
+    "T788888888888|888888888888|888888888889o", // 10
+    "t......*...,.|....*...,...|..*...,.....T", // 11
+    "T.*L..,..m...|...,.Y....s.|.,....T.*...t", // 12
+    "YT......y...,|...m.*...,..|...*...,.o..T", // 13
+    "T..*...,....Y|*...,......T|..,y.....*..y", // 14
+    "o.,..o...*...|......b...,.|....*...,..bT", // 15
+    "T...*...,..T.|.*o..,......|..m,......*.t", // 16
+    "t.b,..t...*..|,......*t..,|.....T..t,..T", // 17
+    "T....*...,...|..*...,.....|*...,......*Y", // 18
+    "YToTtTyTtTYToTtTyTtTYToTtTyTtTYToTtTyTtT", // 19
   ],
 };
