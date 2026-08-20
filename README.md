@@ -5,9 +5,10 @@ AI-assisted development. You walk a map, bump into things, and each thing you
 open describes something a product manager could realistically build themselves.
 It runs entirely in your browser — no server, no accounts, no tracking.
 
-**This is a work in progress.** Right now the repository contains the engine and
-a throwaway demo map. The three real zones, the station panels and the quiz
-gates are not built yet.
+**This is a work in progress.** The engine, the station panels, the gate quiz
+and saved progress all work. What you are walking around is still a throwaway
+demo map with three placeholder zones — the real three-zone map and the Zone 2
+and Zone 3 stations are not built yet.
 
 ## Run it locally
 
@@ -29,8 +30,31 @@ you already have. There is no build step and nothing to install.
 | Key | Action |
 |---|---|
 | Arrow keys or `W` `A` `S` `D` | Move |
-| `E`, `Enter` or `Space` | Interact *(nothing to interact with yet)* |
-| `Escape` | Cancel |
+| `E`, `Enter` or `Space` | Open whatever you are standing next to |
+| `Escape` | Close a panel, or walk away from a gate question |
+
+Inside a station panel, `↑` `↓` and `PageUp` `PageDown` scroll it. At a gate,
+`1`–`4` pick an answer outright, or use `↑` `↓` and `Enter`.
+
+You do not have to be facing something to open it — standing next to it is
+enough. Facing it just decides which one you get when there are two.
+
+## Gates and progress
+
+Each zone ends at a gate with one question, and the answer is findable in the
+zone you are standing in. A wrong answer says so and lets you try again straight
+away: there is no score, no timer and no way to lose this game.
+
+Where you have been is saved in your own browser's local storage, under the key
+`vibing.v1`, and nowhere else. Nothing is sent anywhere and nothing is measured
+— there is no server to send it to. Two buttons under the game:
+
+- **Reset progress** clears it and closes the gates again, after asking.
+- **Export progress** shows a few lines you can copy and paste into a chat. It
+  contains only which stations you opened and which zones you unlocked.
+
+If that saved data ever gets corrupted, the game quietly starts you again from
+scratch rather than showing you an error.
 
 ## Desktop and keyboard only
 
@@ -46,11 +70,7 @@ node --test
 ```
 
 No test framework and nothing to install: the tests use Node's built-in
-`node:test`. Node 20 or newer.
-
-On Node 20 you can also point the runner at the folder with `node --test tests/`.
-Node 22 changed how the runner treats a bare directory argument, so on newer
-versions use `node --test` on its own, or `node --test tests/*.test.js`.
+`node:test`. Node 22 or newer.
 
 ## Credits
 

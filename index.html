@@ -10,6 +10,9 @@
         call, so it has to stay crisp and high-contrast on a compressed stream.
         The canvas is scaled by whole numbers only. Fractional scaling makes
         pixel art shimmer, and shimmer is exactly what a video codec destroys.
+
+        The overlay UI - panels, the gate quiz, the HUD - is styled in
+        src/ui/ui.css, linked below.
       */
       :root {
         color-scheme: dark;
@@ -39,8 +42,10 @@
       }
 
       /* Sized by the viewport, never by its contents, so measuring it to work
-         out the scale cannot feed back into the layout. */
+         out the scale cannot feed back into the layout. `position: relative` is
+         what the HUD layer anchors to. */
       #stage {
+        position: relative;
         flex: 1 1 auto;
         min-height: 0;
         width: 100%;
@@ -59,12 +64,20 @@
         image-rendering: -moz-crisp-edges;
       }
 
+      /* The canvas takes focus so that closing an overlay has somewhere to give
+         it back to. It should never show a focus ring - it is the game, not a
+         control. */
+      canvas:focus {
+        outline: none;
+      }
+
       #hint {
         flex: 0 0 auto;
         margin: 0;
-        padding: 12px 16px 18px;
+        padding: 4px 16px 14px;
         font-size: 15px;
         color: #97a3b6;
+        text-align: center;
       }
 
       #notice {
@@ -107,6 +120,7 @@
         color: #9fb3d1;
       }
     </style>
+    <link rel="stylesheet" href="src/ui/ui.css" />
   </head>
   <body>
     <p id="notice" hidden>
@@ -115,7 +129,16 @@
     </p>
 
     <div id="stage">
-      <canvas id="game" width="400" height="240" aria-label="Vibing game screen"></canvas>
+      <canvas
+        id="game"
+        width="400"
+        height="240"
+        tabindex="0"
+        aria-label="Vibing game screen"
+      ></canvas>
+
+      <!-- Zone, visited count and the "press E" prompt. Filled by src/ui/hud.js. -->
+      <div id="hud"></div>
 
       <div id="error" hidden role="alert">
         <h1>Vibing could not start</h1>
@@ -127,63 +150,45 @@
       </noscript>
     </div>
 
-    <p id="hint">Arrow keys or WASD to move</p>
+    <div id="controls">
+      <div class="controls-row">
+        <button id="reset-button" class="button" type="button">Reset progress</button>
+        <button id="export-button" class="button" type="button">Export progress</button>
+      </div>
 
-    <script type="module">
-      // Relative paths everywhere. The site is served from a subpath on GitHub
-      // Pages, so a leading slash would work locally and 404 in production.
-      import { startGame } from "./src/engine/game.js";
-      import { legend, mapDef } from "./src/content/map.js";
+      <!-- Inline confirmation rather than window.confirm(), which looks like a
+           browser fault when it appears on a shared screen mid-talk. -->
+      <div id="reset-confirm" class="controls-drawer" hidden>
+        <p class="controls-question">
+          Start over? This clears every station you have visited and closes the gates again.
+        </p>
+        <div class="controls-row">
+          <button id="reset-yes" class="button button-strong" type="button">Yes, start over</button>
+          <button id="reset-no" class="button" type="button">Keep my progress</button>
+        </div>
+      </div>
 
-      const canvas = document.getElementById("game");
-      const stage = document.getElementById("stage");
-      const errorBox = document.getElementById("error");
-      const errorMessage = document.getElementById("error-message");
-      const notice = document.getElementById("notice");
-      const hint = document.getElementById("hint");
+      <div id="export-box" class="controls-drawer" hidden>
+        <pre id="export-text" class="controls-export" tabindex="0"></pre>
+        <div class="controls-row">
+          <button id="export-copy" class="button" type="button">Copy</button>
+          <button id="export-close" class="button" type="button">Close</button>
+        </div>
+      </div>
+    </div>
 
-      // The logical resolution from the rendering contract. The canvas
-      // backing store is never resized; only its CSS size changes.
-      const LOGICAL_W = canvas.width;
-      const LOGICAL_H = canvas.height;
+    <p id="hint">
+      Arrow keys or WASD to move · <strong>E</strong> to open what you are standing next to ·
+      <strong>Esc</strong> to close
+    </p>
 
-      /** Blow the canvas up by the largest whole number that still fits. */
-      function rescale() {
-        const box = stage.getBoundingClientRect();
-        const byWidth = Math.floor(box.width / LOGICAL_W);
-        const byHeight = Math.floor(box.height / LOGICAL_H);
-        const scale = Math.max(1, Math.min(byWidth, byHeight));
+    <!-- Overlay containers. Both are empty: the modules below build their own
+         contents so the markup and the behaviour stay in one file each. -->
+    <div id="panel-root" hidden></div>
+    <div id="quiz-root" hidden></div>
 
-        canvas.style.width = LOGICAL_W * scale + "px";
-        canvas.style.height = LOGICAL_H * scale + "px";
-      }
-
-      function showError(error) {
-        canvas.hidden = true;
-        hint.hidden = true;
-        errorMessage.textContent =
-          error && error.message ? error.message : String(error);
-        errorBox.hidden = false;
-      }
-
-      // A touchscreen laptop reports a coarse pointer but still has a keyboard,
-      // so the test is whether there is no fine pointer at all.
-      if (window.matchMedia) {
-        const coarse = window.matchMedia("(pointer: coarse)").matches;
-        const fine = window.matchMedia("(any-pointer: fine)").matches;
-        if (coarse && !fine) notice.hidden = false;
-      }
-
-      rescale();
-      window.addEventListener("resize", rescale);
-
-      try {
-        // Exposed so pause(), resume() and destroy() can be tried from the
-        // browser console. Nothing is sent anywhere; there is no tracking here.
-        window.vibing = await startGame(canvas, { mapDef, legend });
-      } catch (error) {
-        showError(error);
-      }
-    </script>
+    <!-- Relative path. The site is served from a subpath on GitHub Pages, so a
+         leading slash would work locally and 404 in production. -->
+    <script type="module" src="src/main.js"></script>
   </body>
 </html>

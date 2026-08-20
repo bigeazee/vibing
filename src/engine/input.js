@@ -52,6 +52,7 @@ const SUPPRESS_DEFAULT = new Set([
  *   direction: () => ({dx: number, dy: number}|null),
  *   isDown: (action: string) => boolean,
  *   consumePress: (action: string) => boolean,
+ *   clearPresses: () => void,
  *   destroy: () => void
  * }}
  */
@@ -136,6 +137,18 @@ export function createInput(target = window) {
       if (!pressed[action]) return false;
       pressed[action] = false;
       return true;
+    },
+
+    /**
+     * Throw away every pending press flag.
+     *
+     * A press flag stays set until something consumes it, and while an overlay
+     * is open nothing does — the game is paused. Without this, the E that opens
+     * a panel is still sitting in the queue when the panel closes and instantly
+     * reopens it. Call this on every overlay open and every overlay close.
+     */
+    clearPresses() {
+      for (const action of Object.keys(pressed)) pressed[action] = false;
     },
 
     destroy() {
