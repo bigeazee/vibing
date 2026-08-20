@@ -195,7 +195,7 @@ export const SPRITES = {
  * terrain tile - drawn on their own they show the void behind them. Put these in
  * the map's object layer, over an opaque terrain tile.
  *
- * Derived by scanning the alpha channel of all 94 named sprites, not by eye.
+ * Derived by scanning the alpha channel of all 98 named sprites, not by eye.
  * If you add a sprite with any transparency, add its name here too. The content
  * validation test uses this to reject an overlay sprite in a terrain layer.
  */
