@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vibing</title>
+    <style>
+      /*
+        Everything here serves one goal: the game is screen-shared over a video
+        call, so it has to stay crisp and high-contrast on a compressed stream.
+        The canvas is scaled by whole numbers only. Fractional scaling makes
+        pixel art shimmer, and shimmer is exactly what a video codec destroys.
+      */
+      :root {
+        color-scheme: dark;
+      }
+
+      /* Setting `display` on an element overrides the hidden attribute, and the
+         canvas below does exactly that. Without this the hidden canvas still
+         takes up the whole row and shoves the error message off-screen. */
+      [hidden] {
+        display: none !important;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #0d0f14;
+        color: #e8ecf2;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* Sized by the viewport, never by its contents, so measuring it to work
+         out the scale cannot feed back into the layout. */
+      #stage {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+
+      canvas {
+        display: block;
+        background: #0d0f14;
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+      }
+
+      #hint {
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 12px 16px 18px;
+        font-size: 15px;
+        color: #97a3b6;
+      }
+
+      #notice {
+        flex: 0 0 auto;
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 14px 18px;
+        background: #1d2432;
+        border-bottom: 2px solid #33405a;
+        color: #dbe4f2;
+        font-size: 16px;
+        line-height: 1.5;
+        text-align: center;
+      }
+
+      /* The error state is what someone sees when an asset fails to load. It has
+         to be readable from the back of a room, not tucked away in a console. */
+      #error {
+        max-width: 34ch;
+        text-align: center;
+      }
+
+      #error h1 {
+        margin: 0 0 0.5em;
+        font-size: clamp(24px, 4vw, 44px);
+        line-height: 1.15;
+        color: #ffb4a8;
+      }
+
+      #error p {
+        margin: 0;
+        font-size: clamp(17px, 2.4vw, 26px);
+        line-height: 1.45;
+        color: #ffffff;
+      }
+
+      #error code {
+        font-size: 0.85em;
+        color: #9fb3d1;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="notice" hidden>
+      Vibing is keyboard-only at the moment, so it needs a laptop or desktop with
+      arrow keys. Touch controls are not built yet.
+    </p>
+
+    <div id="stage">
+      <canvas id="game" width="400" height="240" aria-label="Vibing game screen"></canvas>
+
+      <div id="error" hidden role="alert">
+        <h1>Vibing could not start</h1>
+        <p id="error-message"></p>
+      </div>
+
+      <noscript>
+        <p>Vibing needs JavaScript. It runs entirely in your browser — there is no server.</p>
+      </noscript>
+    </div>
+
+    <p id="hint">Arrow keys or WASD to move</p>
+
+    <script type="module">
+      // Relative paths everywhere. The site is served from a subpath on GitHub
+      // Pages, so a leading slash would work locally and 404 in production.
+      import { startGame } from "./src/engine/game.js";
+      import { legend, mapDef } from "./src/content/map.js";
+
+      const canvas = document.getElementById("game");
+      const stage = document.getElementById("stage");
+      const errorBox = document.getElementById("error");
+      const errorMessage = document.getElementById("error-message");
+      const notice = document.getElementById("notice");
+      const hint = document.getElementById("hint");
+
+      // The logical resolution from the rendering contract. The canvas
+      // backing store is never resized; only its CSS size changes.
+      const LOGICAL_W = canvas.width;
+      const LOGICAL_H = canvas.height;
+
+      /** Blow the canvas up by the largest whole number that still fits. */
+      function rescale() {
+        const box = stage.getBoundingClientRect();
+        const byWidth = Math.floor(box.width / LOGICAL_W);
+        const byHeight = Math.floor(box.height / LOGICAL_H);
+        const scale = Math.max(1, Math.min(byWidth, byHeight));
+
+        canvas.style.width = LOGICAL_W * scale + "px";
+        canvas.style.height = LOGICAL_H * scale + "px";
+      }
+
+      function showError(error) {
+        canvas.hidden = true;
+        hint.hidden = true;
+        errorMessage.textContent =
+          error && error.message ? error.message : String(error);
+        errorBox.hidden = false;
+      }
+
+      // A touchscreen laptop reports a coarse pointer but still has a keyboard,
+      // so the test is whether there is no fine pointer at all.
+      if (window.matchMedia) {
+        const coarse = window.matchMedia("(pointer: coarse)").matches;
+        const fine = window.matchMedia("(any-pointer: fine)").matches;
+        if (coarse && !fine) notice.hidden = false;
+      }
+
+      rescale();
+      window.addEventListener("resize", rescale);
+
+      try {
+        // Exposed so pause(), resume() and destroy() can be tried from the
+        // browser console. Nothing is sent anywhere; there is no tracking here.
+        window.vibing = await startGame(canvas, { mapDef, legend });
+      } catch (error) {
+        showError(error);
+      }
+    </script>
+  </body>
+</html>

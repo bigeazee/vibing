@@ -1,0 +1,25 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: node --test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # No install step: Vibing ships zero runtime dependencies and the tests
+      # use node:test, which is built in. If a step ever appears here that runs
+      # npm install, something has gone wrong with the project's constraints.
+      - name: Run tests
+        run: node --test tests/
