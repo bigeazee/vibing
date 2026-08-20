@@ -13,10 +13,10 @@ free art deserves naming.
 | Tiny Town | <https://kenney.nl/assets/tiny-town> |
 | Tiny Dungeon | <https://kenney.nl/assets/tiny-dungeon> |
 
-> **Note:** the packs in `/assets/` have been pruned to the files this project actually
-> uses — the packed tile atlases and the pack licence files. The full packs contain many
-> more individual sprites and are worth downloading directly from Kenney if you are
-> extending the map.
+> **Note:** the packs in `/assets/` have been pruned to the two packed tile atlases
+> (`tilemap_packed.png`) and each pack's `License.txt` — 36 KB in total. The full packs also
+> ship a 1px-spaced `tilemap.png` and 132 individual tile PNGs each, which this project does
+> not use. Download the full packs from Kenney if you are extending the map.
 
 If you add art from any other source, check its licence first and add it to this file.
 

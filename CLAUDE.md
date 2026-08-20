@@ -81,18 +81,58 @@ compressed feed in a small window.
 
 ## 4. Sprite sheet contract
 
-> **STATUS: not yet defined.** The Kenney asset packs have not landed in `/assets/` yet.
-> Once they do, `src/content/sprites.js` becomes the single source of truth for every
-> sprite name, atlas, and tile index in this project.
+`src/content/sprites.js` is the **single source of truth** for every sprite in this project.
 
-**When it exists, every reference to a sprite anywhere in this repo must use a name from
-`src/content/sprites.js`. Never hardcode an atlas index in engine or content code.** A test
-enforces this: any station or map tile referencing an unknown sprite name fails the build.
+**Every reference to a sprite anywhere in this repo must use a name from `SPRITES`. Never
+hardcode an atlas index in engine or content code.** A test enforces this: any station or map
+tile referencing an unknown sprite name fails. To use an unnamed tile, add it to `SPRITES`
+first — that is a one-line change and always the correct move.
 
-Art comes from Kenney's CC0 packs (see `CREDITS.md`). Do not add art from any other source
-without checking the licence and updating `CREDITS.md`.
+### Verified atlas geometry
 
----
+| Property | Value |
+|---|---|
+| Atlases | `assets/kenney-tiny-town/tilemap_packed.png`, `assets/kenney-tiny-dungeon/tilemap_packed.png` |
+| Image size | 192 x 176 px each |
+| Grid | 12 columns x 11 rows = 132 tiles each |
+| Tile size | 16 x 16 px |
+| Padding | **None.** No spacing between tiles. |
+| Indexing | **Row-major**: `index = row * 12 + col` |
+
+These are measured facts, not assumptions. Row-major indexing was confirmed by cropping all
+132 tiles from each atlas and comparing them byte-for-byte against the packs' individual
+`Tiles/tile_NNNN.png` files. Kenney also ships a 1px-spaced `tilemap.png`; it is **not** in
+this repo and must not be reintroduced.
+
+### What the contract gives you
+
+- `TILE_SIZE` — 16
+- `ATLASES` — atlas paths and grid geometry
+- `SPRITES` — 98 named sprites, `name -> [atlasKey, index]`
+- `spriteRect(name)` — resolves to `{atlas, src, sx, sy, w, h}` ready for `drawImage`.
+  **Throws** on an unknown name. Let it throw; never draw a silent wrong tile.
+- `spriteExists(name)`, `spriteNames()`
+- `OVERLAY_SPRITES` / `isOverlay(name)` — see below
+
+### Terrain tiles versus overlay sprites
+
+43 of the 98 sprites are fully opaque and safe to use as a **base terrain tile**. The other 55
+contain transparent pixels and **must be drawn over a terrain tile** — used as a base tile
+they show the void behind them. This split was derived by scanning the alpha channel of every
+named sprite. The map format therefore needs at least two draw layers: an opaque terrain
+layer and an overlay layer for props, fences, trees and characters.
+
+### Things the art does not have
+
+- **Tiny Town contains no character sprites.** The player and every NPC come from Tiny
+  Dungeon. The two packs share a palette and outline style and sit together on one map
+  without clashing.
+- **Characters are a single front-facing frame each.** There are no directional variants and
+  no walk-cycle frames. Engine code must not assume either exists. Movement can be given life
+  with a small vertical bob while walking; that is polish, not a requirement.
+
+Art is Kenney, CC0. See `CREDITS.md`. Do not add art from another source without checking its
+licence and updating `CREDITS.md`.
 
 ## 5. Repository layout
 
