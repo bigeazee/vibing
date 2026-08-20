@@ -83,6 +83,17 @@ Then change it. Here is the shape, with every field that matters:
 }
 ```
 
+`demo.type` has three honest states, and picking the wrong one overstates what
+exists:
+
+| Use | When |
+|---|---|
+| `{ type: "placeholder" }` | Nothing is built yet. The panel says "Playable demo coming soon." |
+| `{ type: "external" }` with `links` | It is built and somebody can go and look at it. |
+| `{ type: "external" }` with `links: []` | It is built, but there is nowhere public to point at. The panel says "No demo linked for this one yet." |
+
+`{ type: "embedded" }` is not implemented and the validation suite rejects it.
+
 ### 3. Fill in all four sections and all seven receipt fields
 
 Every station panel has the same four sections in the same order — **the
@@ -202,7 +213,6 @@ The rules it enforces:
 | A zone with more or fewer than one flagship | One per zone gets talked through live |
 | A zone with more or fewer than one plaque | The plaque is what makes that zone's gate answer findable |
 | `demo.type` that is not `placeholder` or `external` | `embedded` is not implemented yet |
-| `demo.type: "external"` with no links | The panel would have nothing to link to |
 | A sprite name that is not in `sprites.js` | A typo would be a hole in the live site |
 | A tile off the map, or on a solid tile | You could never reach it |
 | Two things on the same tile | Only the first one could ever be opened |

@@ -620,7 +620,10 @@ export const stations = [
       hardestPart: "Trusting your own bad weeks enough to leave them in",
     },
 
-    demo: { type: "placeholder" },
+    // Built, but with nowhere public to point at. "external" with no links
+    // renders "No demo linked for this one yet", which is true. "placeholder"
+    // would say "Playable demo coming soon", which would not be.
+    demo: { type: "external" },
     links: [],
   },
 

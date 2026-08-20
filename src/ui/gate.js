@@ -23,16 +23,17 @@ const PASS_LINGER_MS = 1100;
 
 /**
  * @param {HTMLElement} root an empty container element in index.html
- * @returns {{open: (gate: object, handlers?: {onPass?: Function, onClose?: Function}) => void,
- *            close: () => void, isOpen: () => boolean}}
+ * @returns {{open: (gate: object, handlers?: {onPass?: Function}) => void,
+ *            close: () => void, isOpen: () => boolean,
+ *            onClose: (handler: Function) => void}}
  */
 export function createGateQuiz(root) {
   if (!root) throw new Error("createGateQuiz: needs a container element from index.html.");
 
+  const closeHandlers = [];
   let open = false;
   let passed = false;
   let onPass = null;
-  let onClose = null;
   let closeTimer = null;
   let returnFocusTo = null;
   let buttons = [];
@@ -106,11 +107,11 @@ export function createGateQuiz(root) {
 
   /**
    * @param {object} gate one object from src/content/gates.js
-   * @param {{onPass?: Function, onClose?: Function}} [handlers]
-   *   onPass fires once, on a correct answer, before the quiz closes.
-   *   onClose fires on EVERY way out - Escape, the backdrop, and the timer that
-   *   closes the quiz after a correct answer - so the caller never has to poll
-   *   isOpen() to notice.
+   * @param {{onPass?: Function}} [handlers]
+   *   onPass fires once, on a correct answer, before the quiz closes. Closing
+   *   is NOT here: that is onClose() below, registered once at boot, exactly as
+   *   the panel does it. Two overlays that mean the same thing by "closed"
+   *   should not be wired up two different ways.
    */
   function openQuiz(gate, handlers = {}) {
     if (!gate) throw new Error("gateQuiz.open: needs a gate object.");
@@ -121,7 +122,6 @@ export function createGateQuiz(root) {
     cancelCloseTimer();
     passed = false;
     onPass = typeof handlers.onPass === "function" ? handlers.onPass : null;
-    onClose = typeof handlers.onClose === "function" ? handlers.onClose : null;
 
     question.textContent = gate.question || "";
     note.textContent = "";
@@ -185,11 +185,7 @@ export function createGateQuiz(root) {
       returnFocusTo.focus();
     }
     returnFocusTo = null;
-    // Cleared before it fires, so a handler that reopens the quiz is not then
-    // holding a stale closer.
-    const closed = onClose;
-    onClose = null;
-    if (closed) closed();
+    for (const handler of closeHandlers) handler();
   }
 
   function cancelCloseTimer() {
@@ -204,6 +200,14 @@ export function createGateQuiz(root) {
     close,
     isOpen() {
       return open;
+    },
+    /**
+     * Fires on EVERY way out - Escape, the backdrop, and the timer that closes
+     * the quiz after a correct answer - so the caller never has to poll
+     * isOpen(). Registered once and it lasts the life of the quiz.
+     */
+    onClose(handler) {
+      if (typeof handler === "function") closeHandlers.push(handler);
     },
   };
 }

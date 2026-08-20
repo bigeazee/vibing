@@ -31,8 +31,25 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      # The repository root IS the site. There is no build step, by design:
-      # anyone can fork this, edit one file and see the change.
+      # An EXCLUDE list, not an include list, and that is the whole point.
+      #
+      # List what to include and a contributor who adds a directory of site
+      # assets gets a silently broken site: the missing thing is invisible
+      # until somebody reports it. List what to exclude and the same
+      # contributor gets a slightly untidy site: the extra thing is visible and
+      # harmless. Choose the failure mode you can see.
+      #
+      # This is NOT a build step. Nothing is transformed, nothing is generated,
+      # and every file served is byte-identical to the file in the repository.
+      # Fork, edit one file, push, and the change is live with no tooling in
+      # between - which is the whole of what the no-build-step rule protects.
+      # Deleting files that were never part of the site does not touch it.
+      #
+      # The checkout is disposable. Nothing is deleted from the repository.
+      - name: Trim non-site files from the artifact
+        run: rm -rf docs tests .github CLAUDE.md package.json
+
+      # What is left IS the site: index.html, src/ and assets/.
       - name: Upload the site
         uses: actions/upload-pages-artifact@v3
         with:

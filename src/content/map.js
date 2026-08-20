@@ -5,7 +5,7 @@
  * One continuous world, 92 x 20 tiles, laid out left to right as three zones:
  *
  *   Zone 1  x 0..30    meadow      open grass, a dirt lane, trees
- *   Zone 2  x 31..61   village     grass, a gravel plaza, RED roofs
+ *   Zone 2  x 31..61   village     grass, a paved street, RED roofs
  *   Zone 3  x 62..91   the works    wooden decking, grey brick, iron and fire
  *
  * The three zones are a difficulty curve made physical, so they are built out
@@ -19,6 +19,20 @@
  * by 14 in luminance and share a hue, so a stone floor under brick walls turns
  * an entire zone into one flat grey wash with no readable floor. Decking under
  * brick is a 39-luminance gap plus opposite hues, and it reads.
+ *
+ * WHY ZONE 2'S MIDDLE IS PAVED RATHER THAN GRAVELLED. It was a solid field of
+ * grass_gravel, thirty tiles by five. Measured the same way, grass_gravel sits
+ * 3 luminance from plain grass while carrying a hard 16-pixel lattice of pale
+ * blobs inside it: all detail, no surface. That is the worst thing you can hand
+ * a video codec - it spends its bits shimmering, and the viewer still cannot
+ * tell it is a different kind of ground. floor_stone is 27 below wall_orange
+ * and 36 below roof_red, on the opposite side of the wheel, and its detail runs
+ * in unbroken horizontal lines rather than a grid, so it holds together as a
+ * surface at the far end of a Teams call. The paving follows the frontages and
+ * stops at the gaps, which leaves every station and the plaque standing on
+ * green: a brown prop on grey stone is the one place that contrast runs out.
+ * grass_gravel survives as three tiles of trodden ground under the market
+ * awnings at x 49..51, which is the size it works at.
  *
  * The format is an ASCII grid plus a legend rather than an array of tile
  * numbers, because someone who does not write code has to be able to open this
@@ -43,7 +57,7 @@
  * Stations, gates and plaques are NOT in this grid. They are drawn from
  * stations.js, gates.js and plaques.js as entities, so adding a station stays a
  * one-object edit to one file. Their tiles must therefore be walkable ground
- * here - markStationsSolid() and lockGates() in src/engine/zones.js make them
+ * here - markSolid() and lockGates() in src/engine/zones.js make them
  * solid at boot, and they throw if the map already did.
  */
 
@@ -175,11 +189,11 @@ export const mapDef = {
     "o.....t........tO.....y.ty..y.MRR...RR.....RRRRRR...RRRRR....MMMMMMM___;_UUUUUU____MMMn__;_M", //  5
     "t.,T*T*.......bo.ttY...Y...tO.Mda...da.....aaddaaC.kaadda....MMMMMMM=###=cchhcc_ij_MMMN_;__M", //  6
     "o.............m..m..,........sMAD...AD.....ADAADA~~~ADAAD..CkMFIMMIF#####BHBBHB____FMIF_;__M", //  7
-    "t.............................M%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%M_J;_;_#####_jJ________;ii____M", //  8
-    "t12222222222222222222222222222F%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%F___;;_________;______________M", //  9
-    "T455555q555555r5555555q555e5555%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%_______;___________________;_M", // 10
-    "T78888888888888888888888888888F%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%F____;_________;_________;____M", // 11
-    "t.............................M%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%M;___ii_;;_____ii_____________M", // 12
+    "t.............................M##,.,##.,.,.######%%%#####,.##M_J;_;_#####_jJ________;ii____M", //  8
+    "t12222222222222222222222222222F##############################F___;;_________;______________M", //  9
+    "T455555q555555r5555555q555e5555###############################_______;___________________;_M", // 10
+    "T78888888888888888888888888888F##############################F____;_________;_________;____M", // 11
+    "t.............................M,######.,.######,.,.,######.,.M;___ii_;;_____ii_____________M", // 12
     "tt,...,,.t...........t.,....b.M.xxXxxx...xxXxxx[---].xxXxxx..MFMIMFj__uuVuuu;__i_J_FMINIF;_M", // 13
     "T.b.T......s,o....,y..*,.,T..*M.RRRRRR...RRRRRR|,sm|.RRRRRR..MnMMnN___UUUUUUj______MMMMMM__M", // 14
     "o,.[--G-].s*,t,.......TtK.....M.aaddaa...aaddaa{---}.aaddaa..MMMMMM___cchhcc______;MMMMMNJJM", // 15

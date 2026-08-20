@@ -234,11 +234,18 @@ test('demo.type "embedded" fires, because it is not implemented', () => {
   fires(problems, /Station "monty" has demo\.type "embedded", which is not implemented/);
 });
 
-test('demo.type "external" with no links fires', () => {
+test('demo.type "external" with no links is legal: it is the honest state', () => {
+  // A thing that has been built but has nowhere public to point at. The panel
+  // says "No demo linked for this one yet", which is true; "placeholder" would
+  // say "Playable demo coming soon", which would be a promise nobody has made.
   const problems = brokenContent((bundle) => {
     station(bundle, "linky").links = [];
   });
-  fires(problems, /Station "linky" has demo\.type "external" but no links/);
+  assert.deepEqual(
+    problems.filter((problem) => /"linky".*(demo|link)/.test(problem)),
+    [],
+    "external with no links must not be reported as a problem"
+  );
 });
 
 test("a link with no href fires", () => {

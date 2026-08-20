@@ -4,6 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Vibing</title>
+
+    <!--
+      The player sprite, cropped out of the Kenney Tiny Dungeon atlas onto the
+      game's own grass colour, at 32x32, inlined as a data URI.
+
+      Inlined rather than shipped as /favicon.ico for two reasons. It costs no
+      request at all - a file would still be one, and a missing one is the only
+      404 this site had. And an explicit icon link is what stops the browser
+      probing /favicon.ico in the first place, which is the actual fix.
+
+      Art is Kenney, CC0, and already credited in CREDITS.md.
+    -->
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABuUlEQVR4AcyVK0iDYRSGDwObzQsYDDabaFHsXkCzUQwWETQZFbw0TYJmDSaDRYtrhiEoom3dIAg2qyhPeMfH2b6dwb+5DR7Of+7v+cpKR5WN325Ssi7/QgHltUcrQnRfKCAaUDSfFaCriy6I5mQFFF3can+dgJzi6aE+g735EWsGNeAF5ObWCfCNnfZDAVwDC5ODBpEgaoAeiOpDAdGAovlQANeAFs2uzBjI95Yc0AM+7/1QgG9ot9+yAK4CCeC7ET4vP2dbFpAbUDQeCtCVWjSx8WAg31ty4OM5PxSQa2xXPBTwWX038AuJNUJ1ysnP2VBArrFd8VDA6smzgS4qb48ZDI+PWiPIAT0QCQ0FRAOK5msC/L/V/tW1pXBNyuL6jTVCNWkv3xLq99QEqOC/bckryglY3jk04JpmUAO5OYprb/dfQIpkB2aXDE7PLgyeXqsGysuSS1Fclh5QDTNBedneewEpk7093jWYejs3+LncMtjsf7EUYkAN0AOak7O99wJflTtLkfKz7ylLObj/sJQ0x7f60ll8Ky7b/ReYu5gxkKKc3dpcsxRfl+b49nnvsxM6/gJ+sff/AAAA//+mvLO0AAAABklEQVQDAFYfgezEWtgEAAAAAElFTkSuQmCC" />
     <style>
       /*
         Everything here serves one goal: the game is screen-shared over a video

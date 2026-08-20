@@ -18,7 +18,7 @@ import assert from "node:assert/strict";
 
 import { parseMap, index } from "../src/engine/tilemap.js";
 import { canEnter } from "../src/engine/collision.js";
-import { lockGates, markStationsSolid } from "../src/engine/zones.js";
+import { lockGates, markSolid } from "../src/engine/zones.js";
 import { legend, mapDef } from "../src/content/map.js";
 import { stations } from "../src/content/stations.js";
 import { gates } from "../src/content/gates.js";
@@ -43,13 +43,13 @@ function fixture() {
 
 const solidAt = (grid, x, y) => grid.solid[index(grid.width, x, y)] === 1;
 
-// ------------------------------------------------------------ markStationsSolid
+// ---------------------------------------------------------------------- markSolid
 
 test("station tiles become solid, so you stand next to a station not on it", () => {
   const grid = fixture();
   assert.equal(solidAt(grid, 1, 1), false);
 
-  markStationsSolid(grid, [{ id: "one", tile: { x: 1, y: 1 } }, { id: "two", tile: { x: 3, y: 2 } }]);
+  markSolid(grid, [{ id: "one", tile: { x: 1, y: 1 } }, { id: "two", tile: { x: 3, y: 2 } }], "station");
 
   assert.equal(solidAt(grid, 1, 1), true);
   assert.equal(solidAt(grid, 3, 2), true);
@@ -59,7 +59,7 @@ test("station tiles become solid, so you stand next to a station not on it", () 
 test("a station on a solid map tile throws, naming the station id", () => {
   const grid = fixture();
   assert.throws(
-    () => markStationsSolid(grid, [{ id: "on-a-tree", tile: { x: 2, y: 0 } }]),
+    () => markSolid(grid, [{ id: "on-a-tree", tile: { x: 2, y: 0 } }], "station"),
     (error) => {
       assert.match(error.message, /on-a-tree/, "the message must name the station");
       assert.match(error.message, /\(2, 0\)/);
@@ -72,18 +72,41 @@ test("a station on a solid map tile throws, naming the station id", () => {
 test("a station off the edge of the map throws, naming the station id", () => {
   const grid = fixture();
   assert.throws(
-    () => markStationsSolid(grid, [{ id: "adrift", tile: { x: 99, y: 0 } }]),
+    () => markSolid(grid, [{ id: "adrift", tile: { x: 99, y: 0 } }], "station"),
     /adrift.*outside a map 5x3/s
   );
 });
 
 test("a station with no usable tile throws, naming the station id", () => {
   const grid = fixture();
-  assert.throws(() => markStationsSolid(grid, [{ id: "no-tile" }]), /no-tile.*tile/s);
+  assert.throws(() => markSolid(grid, [{ id: "no-tile" }], "station"), /no-tile.*tile/s);
   assert.throws(
-    () => markStationsSolid(grid, [{ id: "half-tile", tile: { x: 1 } }]),
+    () => markSolid(grid, [{ id: "half-tile", tile: { x: 1 } }], "station"),
     /half-tile/
   );
+});
+
+test("plaques go through unmodified: no id, and the zone is the name in the message", () => {
+  const grid = fixture();
+  // The shape of a real plaque: a zone and a tile, and deliberately no id.
+  markSolid(grid, [{ zone: 1, tile: { x: 1, y: 1 } }], "plaque");
+  assert.equal(solidAt(grid, 1, 1), true);
+
+  assert.throws(
+    () => markSolid(grid, [{ zone: 3, tile: { x: 2, y: 0 } }], "plaque"),
+    (error) => {
+      assert.match(error.message, /zone 3/, "with no id, the message names the zone");
+      assert.match(error.message, /plaque/, "and calls it a plaque, not a station");
+      assert.ok(!/station/.test(error.message), "naming the wrong kind sends you to the wrong file");
+      return true;
+    }
+  );
+});
+
+test("markSolid insists on a kind, because the kind is what the message says", () => {
+  const grid = fixture();
+  assert.throws(() => markSolid(grid, [{ id: "a", tile: { x: 1, y: 1 } }]), /kind/);
+  assert.throws(() => markSolid(grid, "not an array", "station"), /station.*array/s);
 });
 
 // ------------------------------------------------------------------ lockGates
@@ -179,7 +202,7 @@ function zonesReachable(grid, reachable) {
 /** The real map, with stations blocked and gates set from an unlock predicate. */
 function liveGrid(isZoneUnlocked) {
   const grid = parseMap(mapDef, legend);
-  markStationsSolid(grid, stations);
+  markSolid(grid, stations, "station");
   lockGates(grid, gates, isZoneUnlocked);
   return grid;
 }
@@ -211,7 +234,7 @@ test("unlocking both gates opens the whole map", () => {
 
 test("re-locking after an unlock shuts the zones again", () => {
   const grid = parseMap(mapDef, legend);
-  markStationsSolid(grid, stations);
+  markSolid(grid, stations, "station");
 
   lockGates(grid, gates, () => true);
   assert.deepEqual(zonesReachable(grid, reachableFrom(grid, grid.spawn)), [1, 2, 3]);
@@ -250,12 +273,12 @@ test("every gate can be walked up to from the zone it leads out of", () => {
   );
 });
 
-test("markStationsSolid can be called twice without reporting its own work", () => {
+test("markSolid can be called twice without reporting its own work", () => {
   const grid = fixture();
   const testStations = [{ id: "one", tile: { x: 1, y: 1 } }];
 
-  markStationsSolid(grid, testStations);
-  markStationsSolid(grid, testStations);
+  markSolid(grid, testStations, "station");
+  markSolid(grid, testStations, "station");
 
   assert.equal(solidAt(grid, 1, 1), true);
 });

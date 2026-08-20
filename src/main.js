@@ -21,11 +21,11 @@
 
 import { startGame } from "./engine/game.js";
 import { interactableFor } from "./engine/interaction.js";
-import { lockGates, markStationsSolid } from "./engine/zones.js";
+import { lockGates, markSolid } from "./engine/zones.js";
 import { TILE_SIZE } from "./content/sprites.js";
 import { gates } from "./content/gates.js";
 import { legend, mapDef } from "./content/map.js";
-import { plaqueId, plaques } from "./content/plaques.js";
+import { plaques } from "./content/plaques.js";
 import { FLAGSHIP_MARKER_SPRITE, stations } from "./content/stations.js";
 import { createProgress } from "./state/progress.js";
 import { createGateQuiz } from "./ui/gate.js";
@@ -147,13 +147,6 @@ const quiz = createGateQuiz(document.getElementById("quiz-root"));
 const gateSet = new Set(gates);
 const plaqueSet = new Set(plaques);
 
-/**
- * Plaques are solid like stations, so you stand next to one rather than on it.
- * markStationsSolid is generic over anything with an id and a tile; plaques
- * identify themselves by zone, so they borrow a name for the error message.
- */
-const plaqueBlockers = plaques.map((plaque) => ({ id: plaqueId(plaque), tile: plaque.tile }));
-
 /** Stations plus any still-locked gate. Rebuilt by syncGates. */
 const interactables = [];
 
@@ -165,15 +158,18 @@ try {
   game = await startGame(canvas, { mapDef, legend, entities, onUpdate: tick });
 
   // After startGame, because both need the parsed grid it returns.
-  markStationsSolid(game.grid, stations);
-  markStationsSolid(game.grid, plaqueBlockers);
+  markSolid(game.grid, stations, "station");
+  markSolid(game.grid, plaques, "plaque");
   syncGates();
 
   refreshProgress();
   hud.setZone(game.grid.zoneAt(game.player.tileX, game.player.tileY));
   wireControls();
 
+  // Both overlays report a close the same way: registered once, fires on every
+  // close for the life of the overlay.
   panel.onClose(onOverlayClosed);
+  quiz.onClose(onOverlayClosed);
   focusCanvas();
 
   // Exposed so pause(), resume() and destroy() can be tried from the browser
@@ -242,7 +238,6 @@ function openGate(gate) {
       progress.unlockZone(gate.toZone);
       syncGates();
     },
-    onClose: onOverlayClosed,
   });
   pauseForOverlay();
 }

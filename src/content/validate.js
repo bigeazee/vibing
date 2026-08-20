@@ -30,7 +30,7 @@
 import { canEnter } from "../engine/collision.js";
 import { MOVE_MS } from "../engine/player.js";
 import { index, parseMap } from "../engine/tilemap.js";
-import { lockGates, markStationsSolid } from "../engine/zones.js";
+import { lockGates, markSolid } from "../engine/zones.js";
 import { spriteExists } from "./sprites.js";
 import { FLAGSHIP_MARKER_SPRITE } from "./stations.js";
 import { plaqueId } from "./plaques.js";
@@ -250,9 +250,11 @@ function checkDemo(station, say) {
         "until an embedded demo module exists."
     );
   }
-  if (demo.type === "external" && (!Array.isArray(station.links) || station.links.length === 0)) {
-    say('has demo.type "external" but no links, so the panel has nothing to send anybody to.');
-  }
+  // "external" with no links is LEGAL, and it is the honest state for a thing
+  // that has been built but has nowhere public to point at. The panel renders
+  // "No demo linked for this one yet", which is true. "placeholder" would
+  // render "Playable demo coming soon", which promises something that is not
+  // coming - and this game's whole argument rests on its figures being honest.
   for (const link of Array.isArray(station.links) ? station.links : []) {
     if (!link || !isFilledString(link.href)) {
       say("has a link with no href. Every link needs a full URL somebody can click.");
@@ -452,11 +454,8 @@ function checkTheMapAsWalked(grid, stations, gates, plaques, problems) {
   // One grid per unlock state, so no check leaves marks on another one.
   const build = (isZoneUnlocked) => {
     const g = copyOf(grid);
-    markStationsSolid(g, stations);
-    markStationsSolid(
-      g,
-      plaques.map((plaque) => ({ id: plaqueId(plaque), tile: plaque.tile }))
-    );
+    markSolid(g, stations, "station");
+    markSolid(g, plaques, "plaque");
     lockGates(g, gates, isZoneUnlocked);
     return g;
   };
@@ -533,9 +532,9 @@ function checkTheMapAsWalked(grid, stations, gates, plaques, problems) {
 /**
  * A fresh grid with the same layers.
  *
- * Each unlock state gets its own copy, because markStationsSolid and lockGates
- * write into the collision layer and the checks would otherwise see each
- * other's work.
+ * Each unlock state gets its own copy, because markSolid and lockGates write
+ * into the collision layer and the checks would otherwise see each other's
+ * work.
  */
 function copyOf(grid) {
   return {
