@@ -15,6 +15,8 @@
  * stays readable whatever tile happens to be under it.
  */
 
+import { el } from "./overlay.js";
+
 /**
  * @param {HTMLElement} root an empty container element in index.html
  * @returns {{showPrompt: (text: string) => void, hidePrompt: () => void,
@@ -70,11 +72,4 @@ export function createHud(root) {
       progress.textContent = next;
     },
   };
-}
-
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined && text !== null) node.textContent = text;
-  return node;
 }

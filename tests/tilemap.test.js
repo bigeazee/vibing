@@ -202,20 +202,26 @@ test("throws when spawn is on a solid tile, naming the legend character", () => 
   );
 });
 
-// ------------------------------------------------------------- demo map -----
+// ------------------------------------------------------------- the map -----
 
-test("the shipped demo map parses and spawns on walkable ground", async () => {
-  const { mapDef, legend: demoLegend } = await import("../src/content/map.js");
-  const grid = parseMap(mapDef, demoLegend);
+test("the shipped map is the size the rendering contract says, and spawns on walkable ground", async () => {
+  const { mapDef, legend: realLegend } = await import("../src/content/map.js");
+  const grid = parseMap(mapDef, realLegend);
 
-  assert.equal(grid.width, 40);
+  // CLAUDE.md section 3: approximately 92 x 20 tiles, one continuous map.
+  assert.equal(grid.width, 92);
   assert.equal(grid.height, 20);
   assert.equal(grid.solid[index(grid.width, grid.spawn.x, grid.spawn.y)], 0);
+  assert.deepEqual(
+    grid.zones.map((zone) => [zone.id, zone.from, zone.to]),
+    [[1, 0, 30], [2, 31, 61], [3, 62, 91]],
+    "three zones, laid out left to right, covering every column"
+  );
 });
 
-test("the demo map has a fully solid border, so the player can never walk off it", async () => {
-  const { mapDef, legend: demoLegend } = await import("../src/content/map.js");
-  const grid = parseMap(mapDef, demoLegend);
+test("the map has a fully solid border, so the player can never walk off it", async () => {
+  const { mapDef, legend: realLegend } = await import("../src/content/map.js");
+  const grid = parseMap(mapDef, realLegend);
 
   for (let x = 0; x < grid.width; x++) {
     assert.equal(grid.solid[index(grid.width, x, 0)], 1, `top border open at x=${x}`);

@@ -25,6 +25,7 @@ import { lockGates, markStationsSolid } from "./engine/zones.js";
 import { TILE_SIZE } from "./content/sprites.js";
 import { gates } from "./content/gates.js";
 import { legend, mapDef } from "./content/map.js";
+import { plaqueId, plaques } from "./content/plaques.js";
 import { FLAGSHIP_MARKER_SPRITE, stations } from "./content/stations.js";
 import { createProgress } from "./state/progress.js";
 import { createGateQuiz } from "./ui/gate.js";
@@ -43,11 +44,20 @@ const hint = document.getElementById("hint");
 const LOGICAL_W = canvas.width;
 const LOGICAL_H = canvas.height;
 
-/** Blow the canvas up by the largest whole number that still fits. */
+/**
+ * Blow the canvas up by the largest whole number that still fits.
+ *
+ * clientWidth/clientHeight rather than getBoundingClientRect(), because the
+ * rect is the BORDER box: measure that and any padding on #stage is counted as
+ * space the canvas can use, so the canvas is chosen a step too large and then
+ * silently clipped by the stage's overflow: hidden. #stage carries no padding
+ * for exactly this reason - every pixel of vertical chrome is a scale step at
+ * the smaller laptop sizes - but measuring the content box keeps that true if
+ * somebody ever puts padding back.
+ */
 function rescale() {
-  const box = stage.getBoundingClientRect();
-  const byWidth = Math.floor(box.width / LOGICAL_W);
-  const byHeight = Math.floor(box.height / LOGICAL_H);
+  const byWidth = Math.floor(stage.clientWidth / LOGICAL_W);
+  const byHeight = Math.floor(stage.clientHeight / LOGICAL_H);
   const scale = Math.max(1, Math.min(byWidth, byHeight));
 
   canvas.style.width = LOGICAL_W * scale + "px";
@@ -108,11 +118,11 @@ for (const gate of gates) {
   entities.push(entity);
 }
 
-for (const station of stations) {
+for (const item of [...stations, ...plaques]) {
   entities.push({
-    sprite: station.sprite,
-    pxX: station.tile.x * TILE_SIZE,
-    pxY: station.tile.y * TILE_SIZE,
+    sprite: item.sprite,
+    pxX: item.tile.x * TILE_SIZE,
+    pxY: item.tile.y * TILE_SIZE,
   });
 }
 
@@ -135,12 +145,19 @@ const quiz = createGateQuiz(document.getElementById("quiz-root"));
 
 /** Identity, not id: a station and a gate could legitimately share an id. */
 const gateSet = new Set(gates);
+const plaqueSet = new Set(plaques);
+
+/**
+ * Plaques are solid like stations, so you stand next to one rather than on it.
+ * markStationsSolid is generic over anything with an id and a tile; plaques
+ * identify themselves by zone, so they borrow a name for the error message.
+ */
+const plaqueBlockers = plaques.map((plaque) => ({ id: plaqueId(plaque), tile: plaque.tile }));
 
 /** Stations plus any still-locked gate. Rebuilt by syncGates. */
 const interactables = [];
 
 let game = null;
-let quizWasOpen = false;
 
 // --------------------------------------------------------------------- boot
 
@@ -149,6 +166,7 @@ try {
 
   // After startGame, because both need the parsed grid it returns.
   markStationsSolid(game.grid, stations);
+  markStationsSolid(game.grid, plaqueBlockers);
   syncGates();
 
   refreshProgress();
@@ -169,13 +187,9 @@ try {
 function tick() {
   if (!game) return;
 
-  // The panel reports its own close through onClose. The quiz has no onClose in
-  // its contract, so its close is noticed here instead - see the summary.
-  const quizOpen = quiz.isOpen();
-  if (quizWasOpen && !quizOpen) onOverlayClosed();
-  quizWasOpen = quizOpen;
-
-  if (quizOpen || panel.isOpen()) return;
+  // Both overlays report their own close through onClose, so nothing here has
+  // to watch for one.
+  if (quiz.isOpen() || panel.isOpen()) return;
 
   hud.setZone(game.grid.zoneAt(game.player.tileX, game.player.tileY));
 
@@ -191,12 +205,21 @@ function tick() {
 }
 
 function promptFor(item) {
-  return gateSet.has(item) ? "Answer the question" : `Open ${item.title}`;
+  if (gateSet.has(item)) return "Answer the question";
+  if (plaqueSet.has(item)) return `Read ${item.title}`;
+  return `Open ${item.title}`;
 }
 
 function openFor(item) {
   if (gateSet.has(item)) openGate(item);
+  else if (plaqueSet.has(item)) openPlaque(item);
   else openStation(item);
+}
+
+/** A plaque is not a station: it opens, but it does not count as visited. */
+function openPlaque(plaque) {
+  panel.openPlaque(plaque);
+  pauseForOverlay();
 }
 
 function openStation(station) {
@@ -219,8 +242,8 @@ function openGate(gate) {
       progress.unlockZone(gate.toZone);
       syncGates();
     },
+    onClose: onOverlayClosed,
   });
-  quizWasOpen = true;
   pauseForOverlay();
 }
 
@@ -245,6 +268,7 @@ function syncGates() {
 
   interactables.length = 0;
   for (const station of stations) interactables.push(station);
+  for (const plaque of plaques) interactables.push(plaque);
 
   for (const gate of gates) {
     const unlocked = progress.isZoneUnlocked(gate.toZone);

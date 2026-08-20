@@ -5,10 +5,10 @@ AI-assisted development. You walk a map, bump into things, and each thing you
 open describes something a product manager could realistically build themselves.
 It runs entirely in your browser — no server, no accounts, no tracking.
 
-**This is a work in progress.** The engine, the station panels, the gate quiz
-and saved progress all work. What you are walking around is still a throwaway
-demo map with three placeholder zones — the real three-zone map and the Zone 2
-and Zone 3 stations are not built yet.
+**This is a work in progress.** The game is content-complete: three zones, nine
+stations, three zone plaques and two gates, on the real 92 x 20 map. What is not
+done is deployment and the live-site check, and the two flagship mini-games are
+still honest "coming soon" placeholders.
 
 ## Run it locally
 
@@ -71,6 +71,12 @@ node --test
 
 No test framework and nothing to install: the tests use Node's built-in
 `node:test`. Node 22 or newer.
+
+## Contributing
+
+A station is one object in one file, and the guide to adding one — plus a
+backlog of ideas nobody has picked up yet — is in
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Credits
 
